@@ -1,4 +1,4 @@
-# POEWAL
+# PoEWAL
 ## 프로젝트 주제 : incorporating-blockchain-into-iot-for-a-secure-smart-healthcare-system
 ## 참여자
 * [Minchul Son](https://github.com/MinChul-Son)
