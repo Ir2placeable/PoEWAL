@@ -17,7 +17,8 @@
 * PoW -> PoEW -> PoEWAL
 
 ### IoT 환경에서 실행 및 테스트
-* **Contiki** with **Cooja simulator**
+* ~~**Contiki** with **Cooja simulator**~~
+* 교수님께서 추천해주신 iFogSim을 사용하려고 고려중
 
 ---------------------
 ### 작업 방법
