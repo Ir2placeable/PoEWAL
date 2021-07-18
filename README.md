@@ -19,6 +19,8 @@
 ### IoT 환경에서 실행 및 테스트
 * ~~**Contiki** with **Cooja simulator**~~
 * 교수님께서 추천해주신 iFogSim을 사용하려고 고려중
+  - [Github](https://github.com/Cloudslab/iFogSim)
+  - [설명 및 사용법](https://www.opensourceforu.com/2018/12/ifogsim-an-open-source-simulator-for-edge-computing-fog-computing-and-iot/)
 
 ---------------------
 ### 작업 방법
