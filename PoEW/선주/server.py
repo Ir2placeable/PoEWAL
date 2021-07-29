@@ -2,11 +2,13 @@ from flask import Flask, jsonify, request
 import json
 from textwrap import dedent
 from uuid import uuid4
-import requests
-
-from werkzeug.wrappers import response
 
 from blockchain_poew import Blockchain
+
+
+######## This is a executable code ######
+######## We used Postman for check ######
+
 
 app = Flask(__name__)
 #노드 식별을 하기 위한 uuid
@@ -14,34 +16,46 @@ node_identiffier = str(uuid4()).replace('-', '')
 #블록체인 객체 선언
 blockchain = Blockchain()
 
+
+
 @app.route('/mine', methods=['GET'])
 def mine():
-    difficulty_max =0
     last_block = blockchain.last_block
     last_proof = last_block['proof']
-    proof, difficulty = blockchain.proof_of_work(last_proof)
-    #??????????????????????????????????????????
-    if(difficulty_max<difficulty):
-        difficulty_max = difficulty
+    proof, difficulty = blockchain.proof_of_work(last_proof,60)
+    #the second variable is the timeframe that considering the performance device
+    #Please change it for smooth test. /The unit is seconds
 
-        if(difficulty_max<=difficulty):
-            blockchain.new_transaction(
-                sender=0,
-                recipient=node_identiffier,
-                sensing=1
-            )
-            previous_hash = blockchain.hash(last_block)
-            block = blockchain.new_block(proof,difficulty, previous_hash)
+    blockchain.new_transaction(
+        sender=0,
+        recipient=node_identiffier,
+        sensing=1
+    )
+    #############################################
 
-            response = {
-                'message': 'new block forged',
-                'index' : block['index'],
-                'transactions': block['transactions'],
-                'proof': block['proof'],
-                'difficulty':block['difficulty'],
-                'previous_hash': block['previous_hash']
-            }
-            return jsonify(response), 200
+    #In here, will come a code that passes the result of its own solution
+    #to each node to pick a winner in mining.
+    #using Gossip protocol https://github.com/thomai/gossip-python
+    #for then, we need to node discovery.
+    #So we trying let each node broadcast while receiving broadcast
+    #I think a method that if receive a broadcast message, send own Ip address.
+    #and get Ip, write a file config that is used in the Gossip protocol source.
+
+    ##############################################
+    previous_hash = blockchain.hash(last_block)
+    block = blockchain.new_block(proof,difficulty, previous_hash)
+   # block = blockchain.new_block(proof, previous_hash)
+   #I think it will be changed to excepting difficulty!
+
+    response = {
+        'message': 'new block forged',
+        'index' : block['index'],
+        'transactions': block['transactions'],
+        'proof': block['proof'],
+        'difficulty':block['difficulty'],
+        'previous_hash': block['previous_hash']
+    }
+    return jsonify(response), 200
 
 
 
@@ -103,4 +117,4 @@ def consensus():
 
 
 if __name__ == '__main__':
-    app.run(host='192.168.0.38', port=5000)
+    app.run(host='0.0.0.0', port=5000)

@@ -1,13 +1,13 @@
 import hashlib
 import json
-from time import time
-#from A import a  A모듈에서 a함수만 import
+import time
+
 from uuid import uuid4
 from urllib.parse import urlparse
 import requests
-#UUID? : 어떤 개체를 고유하게 식별하는 데 사용되는 16바이트 길이의 숫자
-#32개의 16진수 5개의 그룹 그룹은 하이픈으로 구분
-#예시 )022db29c-d0e2-11e5-bb4c-60f81dca7676
+
+# We take code from https://blog.naver.com/pjt3591oo/221181592127 which referenced https://hackernoon.com/learn-blockchains-by-building-one-117428612f46
+# And we edited for PoEWAL
 class Blockchain(object):
     
     def __init__(self) :
@@ -15,20 +15,23 @@ class Blockchain(object):
         self.current_transactions = []
         self.nodes = set() #노드 정보 set타입 = 노드 url중복 허용 안함.
         #블록체인에서 가장 최조의 블록 genesis block
-        self.new_block(previous_hash=1, proof=100)
+        self.new_block(previous_hash=1,difficulty =1, proof=100)
 
     def register_node(self, address):
         parse_url = urlparse(address)
         self.nodes.add(parse_url.netloc) 
     
-#pass? 조건문에서 넣어줄 조건이 없을 때, class선언에서 초기에 넣어줄 값이 없을 떄
    
     def new_block(self, proof, difficulty, previous_hash=None):
+    #def new_block(self, proof, previous_hash=None):
         block = {
             'index': len(self.chain) + 1,
-            'timestamp': time(),
+            'timestamp': time.time(),
             'transactions': self.current_transactions,
             'proof': proof,
+            #Now I'm thinking the block doesn't need difficulty info!
+            #because we only use difficulty in PoW.
+            # I mean, After the winner selected.
             'difficulty': difficulty,
             'previous_hash': previous_hash or self.hash(self.chain[-1])
         }
@@ -36,7 +39,6 @@ class Blockchain(object):
         self.chain.append(block)
         return block
 
-    #sensing 은 원문에서 amount (화폐 개수)로 나타났지만 IoT를 고려해서 sensing한 데이터 라는 의미로 바꿈
     def new_transaction(self, sender, recipient, sensing):
         self.current_transactions.append({
             'sender': sender,
@@ -82,11 +84,7 @@ class Blockchain(object):
             self.chain = new_chain
             return True
         return False
-#decorator 함수를 받아 명령을 추가한 뒤 다시 함수의 형태로 반환
-#정적메서드 1)@staticmethod 2) @classmethod 둘 다 인스턴스를 만들지 않아도
-#class의 메서드를 바로 실행 할 수 있다.
-#classmethod 에서 메소드에 cls를 인수로 줄 수 있고
-#이는 클래스를 가리켜 클래스의 어떤 속성에도 접근할 수 있다.
+
     @staticmethod
     def hash(block):
         #json.dumps() : 파이썬 object를 json 형식의 str로 직렬화
@@ -94,27 +92,26 @@ class Blockchain(object):
         block_string = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(block_string).hexdigest()
 
-#property(getter, setter) 필드명을 사용하는 것처럼 getter setter호출   
     @property
     def last_block(self):
-        return self.chain[-1] #리스트에서 [-1]은 리스트의 마지막 요솟값
+        return self.chain[-1]
     #=======================    PoW    =================================
-    def proof_of_elapsed_work(self, last_proof,timeframe):
-        time_s = time #작업증명 시작 시간
-        proof = 0 #문제풀이 시도 횟수
-        difficulty = 1 #풀린 문제의 난이도 기본값을 1로 해도 되나..?
-
-        while(time - time_s)>= timeframe:
-            while self.valid_proof(last_proof, proof, difficulty) is False:
-                proof +=1
-            difficulty +=1
-
-        return proof,difficulty
+    def proof_of_work(self, last_proof,timeframe): #timeframe is coming from server
+        time_s = time.time()
+        proof = 0
+        difficulty = 1 
+        while True:
+            if(time.time() - time_s) > (timeframe):
+                break
+            if(self.valid_proof(last_proof, proof, difficulty)):
+                difficulty +=1
+                #if sove a problem, and still in timeframe, up difficult of the problem
+                continue
+            
+        return proof , difficulty
     
     @staticmethod
     def valid_proof(last_proof, proof, difficulty):
-        #challenge + answer => challenge * answer?
-        #원본 :guess = str(last_proof * proof).encode()
         guess = str(last_proof + proof).encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:difficulty] == "0" * difficulty
