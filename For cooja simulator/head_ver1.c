@@ -12,10 +12,9 @@
 #include <string.h>
 #include <stddef.h>
 
-#define SIZEOFBLOCK = 3448;
 typedef struct msg {char * msg; int num;}Msg;
 
-typedef struct results{//Pow 결과 proof와 difficulty를 반환하기 위한 구조체
+typedef struct results{//Structure to recieve values (proof and difficulty) of Pow result.
     int proof;
     int difficulty;
 }PoWEresult;
@@ -207,13 +206,13 @@ broadcast_recv(struct broadcast_conn *c, const linkaddr_t *from)
 }
 static const struct broadcast_callbacks broadcast_call = {broadcast_recv};
 
-PROCESS(main_process, "메인");
+PROCESS(main_process, "main");
 AUTOSTART_PROCESSES(&mian_process);
 
 PROCESS_THREAD(main_process, ev, data)
 {
   PROCESS_BEGIN();
-  //모든 주변 노드에 대해 각기 다른 포트로 소켓통신을 연다. sink를 쓸 수도 있는것 같지만 시간문제로 임기응변
+  //collect :Open socket communication through different ports for all peripheral nodes.
   static linkaddr_t oldparent;
   const linkaddr_t *parent;
   collect_open(&cc, 130, COLLECT_ROUTER, &callbacks);
@@ -231,7 +230,7 @@ PROCESS_THREAD(main_process, ev, data)
 
   while (1)
   {
-    //반복
+    //repeat
        parent = collect_parent(&tc);
       if(!linkaddr_cmp(parent, &oldparent)) {
         if(!linkaddr_cmp(&oldparent, &linkaddr_null)) {
